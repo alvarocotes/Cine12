@@ -1,0 +1,114 @@
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
+import { AuthProvider } from '../../Context/logContext';
+
+const Register = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [formData, setFormData] = useState({
+    nombre: '',
+    email: '',
+    password: '',
+    password2: ''
+  });
+  const [error, setError] = useState('');
+
+  const { nombre, email, password, password2 } = formData;
+
+  const onChange = e => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const onSubmit = async e => {
+    e.preventDefault();
+    if (password !== password2) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
+    try {
+      const res = await axios.post('http://localhost:5000/api/auth/register', {
+        nombre,
+        email,
+        password
+      });
+
+      if (res.data.token) {
+        login(res.data.token);
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Error en el registro');
+    }
+  };
+
+  return (
+    <div className="container mt-5">
+      <div className="row justify-content-center">
+        <div className="col-md-6">
+          <div className="card">
+            <div className="card-body">
+              <h2 className="text-center mb-4">Registro</h2>
+              {error && <div className="alert alert-danger">{error}</div>}
+              <form onSubmit={onSubmit}>
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Nombre"
+                    name="nombre"
+                    value={nombre}
+                    onChange={onChange}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="Email"
+                    name="email"
+                    value={email}
+                    onChange={onChange}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Contraseña"
+                    name="password"
+                    value={password}
+                    onChange={onChange}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Confirmar Contraseña"
+                    name="password2"
+                    value={password2}
+                    onChange={onChange}
+                    required
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary w-100">
+                  Registrarse
+                </button>
+              </form>
+              <div className="mt-3 text-center">
+                <p>¿Ya tienes una cuenta? <Link to="/login">Inicia Sesión</Link></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Register;
