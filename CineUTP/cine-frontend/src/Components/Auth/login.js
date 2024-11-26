@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { AuthProvider } from '../../Context/logContext';
+import { useAuth } from '../../Context/logContext';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,20 +18,21 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const onSubmit = async e => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
+      const res = await axios.post('http://localhost:5000/api/Auth/login', { // Cambiado de log a auth
         email,
         password
       });
-
+  
       if (res.data.token) {
         login(res.data.token);
-        navigate('/');
+        navigate('/home');
       }
     } catch (err) {
-      setError(err.response?.data?.msg || 'Error al iniciar sesión');
+      console.error('Error de login:', err);
+      setError('Credenciales inválidas');
     }
   };
 

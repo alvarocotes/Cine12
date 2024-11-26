@@ -1,45 +1,44 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { AuthProvider } from '../../Context/logContext';
+import { useAuth } from '../../Context/logContext';
 
 const Register = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    nombre: '',
+    name: '',
     email: '',
     password: '',
-    password2: ''
+    confirmPassword: ''
   });
   const [error, setError] = useState('');
 
-  const { nombre, email, password, password2 } = formData;
+  const { name, email, password, confirmPassword } = formData;
 
   const onChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const onSubmit = async e => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    if (password !== password2) {
-      setError('Las contraseñas no coinciden');
-      return;
-    }
-
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', {
-        nombre,
-        email,
-        password
+      const res = await axios.post('http://localhost:5000/api/auth/register', { // Cambiado de log a auth
+        nombre: formData.name,
+        email: formData.email,
+        password: formData.password
       });
-
+  
       if (res.data.token) {
         login(res.data.token);
-        navigate('/');
+        navigate('/home');
       }
     } catch (err) {
-      setError(err.response?.data?.msg || 'Error en el registro');
+      console.error('Error de registro:', err);
+      setError(
+        err.response?.data?.msg || 
+        'Error en el registro. Por favor, intente nuevamente.'
+      );
     }
   };
 
@@ -53,21 +52,22 @@ const Register = () => {
               {error && <div className="alert alert-danger">{error}</div>}
               <form onSubmit={onSubmit}>
                 <div className="mb-3">
+                  <label className="form-label">Nombre</label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Nombre"
-                    name="nombre"
-                    value={nombre}
+                    name="name"
+                    value={name}
                     onChange={onChange}
                     required
+                    minLength="2"
                   />
                 </div>
                 <div className="mb-3">
+                  <label className="form-label">Email</label>
                   <input
                     type="email"
                     className="form-control"
-                    placeholder="Email"
                     name="email"
                     value={email}
                     onChange={onChange}
@@ -75,25 +75,30 @@ const Register = () => {
                   />
                 </div>
                 <div className="mb-3">
+                  <label className="form-label">Contraseña</label>
                   <input
                     type="password"
                     className="form-control"
-                    placeholder="Contraseña"
                     name="password"
                     value={password}
                     onChange={onChange}
                     required
+                    minLength="6"
                   />
+                  <small className="form-text text-muted">
+                    La contraseña debe tener al menos 6 caracteres
+                  </small>
                 </div>
                 <div className="mb-3">
+                  <label className="form-label">Confirmar Contraseña</label>
                   <input
                     type="password"
                     className="form-control"
-                    placeholder="Confirmar Contraseña"
-                    name="password2"
-                    value={password2}
+                    name="confirmPassword"
+                    value={confirmPassword}
                     onChange={onChange}
                     required
+                    minLength="6"
                   />
                 </div>
                 <button type="submit" className="btn btn-primary w-100">

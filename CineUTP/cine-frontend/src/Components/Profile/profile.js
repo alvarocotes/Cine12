@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AuthProvider } from '../../Context/logContext';
+import { useAuth } from '../../Context/logContext';
 import UserInfo from './userInfo';
 import PurchaseHistory from './history';
 import Preferences from './preferences';

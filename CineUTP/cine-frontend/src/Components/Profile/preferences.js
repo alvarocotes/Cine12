@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '../../Context/logContext';
 
 const Preferences = ({ userData, onUpdate }) => {
+  const { logout } = useAuth();
   const [preferences, setPreferences] = useState({
     generos: userData.preferencias?.generos || [],
     notificaciones: userData.preferencias?.notificaciones || false,
@@ -38,6 +40,9 @@ const Preferences = ({ userData, onUpdate }) => {
       onUpdate();
       setError('');
     } catch (err) {
+      if (err.response?.status === 401) {
+        logout();
+      }
       setError(err.response?.data?.msg || 'Error al actualizar preferencias');
     }
   };

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useAuth } from '../../Context/logContext';
 
 const PurchaseHistory = () => {
+  const { logout } = useAuth();
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,6 +20,9 @@ const PurchaseHistory = () => {
       setPurchases(response.data);
     } catch (error) {
       console.error('Error al obtener historial de compras:', error);
+      if (error.response?.status === 401) {
+        logout();
+      }
     } finally {
       setLoading(false);
     }

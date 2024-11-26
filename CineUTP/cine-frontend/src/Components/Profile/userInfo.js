@@ -1,14 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useAuth } from '../../Context/logContext';
 
 const UserInfo = ({ userData, onUpdate }) => {
+  const { logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    nombre: userData.nombre,
-    email: userData.email,
+    nombre: userData.nombre || '',
+    email: userData.email || '',
     telefono: userData.telefono || '',
   });
-  const [error, setError] = useState('');
+
+  // Actualizar formData cuando userData cambie
+  useEffect(() => {
+    setFormData({
+      nombre: userData.nombre || '',
+      email: userData.email || '',
+      telefono: userData.telefono || '',
+    });
+  }, [userData]);
 
   const handleChange = (e) => {
     setFormData({
@@ -28,11 +38,13 @@ const UserInfo = ({ userData, onUpdate }) => {
           headers: { 'x-auth-token': token }
         }
       );
-      onUpdate();
+      await onUpdate(); // Esperar a que se actualice la información
       setIsEditing(false);
-      setError('');
     } catch (err) {
-      setError(err.response?.data?.msg || 'Error al actualizar perfil');
+      if (err.response?.status === 401) {
+        logout();
+      }
+      console.error('Error al actualizar:', err);
     }
   };
 
@@ -48,7 +60,7 @@ const UserInfo = ({ userData, onUpdate }) => {
             <strong>Email:</strong> {userData.email}
           </div>
           <div className="mb-3">
-            <strong>Teléfono:</strong> {userData.telefono || 'No Ingresado'}
+            <strong>Teléfono:</strong> {userData.telefono || 'No especificado'}
           </div>
           <button
             className="btn btn-primary"
@@ -65,7 +77,6 @@ const UserInfo = ({ userData, onUpdate }) => {
     <div className="card">
       <div className="card-body">
         <h3 className="card-title">Editar Información</h3>
-        {error && <div className="alert alert-danger">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label className="form-label">Nombre</label>
@@ -106,7 +117,14 @@ const UserInfo = ({ userData, onUpdate }) => {
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => setIsEditing(false)}
+              onClick={() => {
+                setIsEditing(false);
+                setFormData({ // Restaurar los datos originales al cancelar
+                  nombre: userData.nombre || '',
+                  email: userData.email || '',
+                  telefono: userData.telefono || '',
+                });
+              }}
             >
               Cancelar
             </button>
