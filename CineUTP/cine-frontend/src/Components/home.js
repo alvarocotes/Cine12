@@ -35,22 +35,24 @@ const Home = () => {
       <div className="row">
         {movies.map(movie => (
           <div key={movie._id} className="col-md-4 mb-4">
-            <div className="card">
-              {movie.image && (
+            <div className="card h-100">
+              {movie.imagen && (
                 <img 
-                  src={movie.image} 
+                  src={movie.imagen} 
                   className="card-img-top" 
-                  alt={movie.title}
+                  alt={movie.titulo}
                   style={{ height: '300px', objectFit: 'cover' }}
                 />
               )}
               <div className="card-body">
-                <h5 className="card-title">{movie.title}</h5>
-                <p className="card-text">{movie.description}</p>
+                <h5 className="card-title">{movie.titulo}</h5>
+                <p className="card-text">{movie.sinopsis}</p>
                 <p className="card-text">
                   <small className="text-muted">
-                    Género: {movie.genre}<br/>
-                    Duración: {movie.duration} minutos
+                    Géneros: {Array.isArray(movie.generos) ? movie.generos.join(', ') : 'No disponible'}<br/>
+                    Duración: {movie.duracion} minutos<br/>
+                    Director: {movie.director}<br/>
+                    Estado: {movie.estado}
                   </small>
                 </p>
               </div>

@@ -101,11 +101,27 @@ const MovieManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log('Intentando agregar nueva película:', newMovie);
+      // Formatear los datos en formato JSON válido
+      const movieData = {
+        "titulo": newMovie.titulo.trim(),
+        "sinopsis": newMovie.sinopsis.trim(),
+        "generos": newMovie.generos,
+        "duracion": parseInt(newMovie.duracion),
+        "clasificacion": newMovie.clasificacion,
+        "director": newMovie.director.trim(),
+        "actores": newMovie.actores.map(actor => actor.trim()),
+        "imagen": newMovie.imagen.trim(),
+        "trailer": newMovie.trailer.trim(),
+        "fechaEstreno": newMovie.fechaEstreno,
+        "estado": newMovie.estado
+      };
+
+      console.log('Datos formateados a enviar:', movieData);
+      
       const token = localStorage.getItem('token');
       const response = await axios.post(
         'http://localhost:5000/api/movies',
-        newMovie,
+        movieData,
         {
           headers: { 
             'x-auth-token': token,
@@ -113,6 +129,7 @@ const MovieManagement = () => {
           }
         }
       );
+
       console.log('Película agregada exitosamente:', response.data);
       
       setNewMovie({

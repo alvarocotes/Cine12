@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../Context/logContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Preferences from './preferences';
+import PurchaseHistory from './history';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -10,45 +12,44 @@ const Profile = () => {
   const [error, setError] = useState('');
   const [userInfo, setUserInfo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
     nombre: '',
     email: ''
   });
 
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-
-        console.log('Obteniendo información del perfil...'); // Debug
-        const response = await axios.get('http://localhost:5000/api/users/profile', {
-          headers: {
-            'x-auth-token': token
-          }
-        });
-
-        console.log('Información del perfil recibida:', response.data); // Debug
-        setUserInfo(response.data);
-        setFormData({
-          nombre: response.data.nombre,
-          email: response.data.email
-        });
-        setError('');
-      } catch (err) {
-        console.error('Error al obtener perfil:', err);
-        setError('Error al cargar la información del perfil');
-        if (err.response?.status === 401) {
-          navigate('/login');
-        }
-      } finally {
-        setLoading(false);
+  const fetchUserInfo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
       }
-    };
 
+      const response = await axios.get('http://localhost:5000/api/users/profile', {
+        headers: {
+          'x-auth-token': token
+        }
+      });
+
+      setUserInfo(response.data);
+      setFormData({
+        nombre: response.data.nombre,
+        email: response.data.email
+      });
+      setError('');
+    } catch (err) {
+      console.error('Error al obtener perfil:', err);
+      setError('Error al cargar la información del perfil');
+      if (err.response?.status === 401) {
+        navigate('/login');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchUserInfo();
   }, [navigate]);
 
@@ -84,6 +85,71 @@ const Profile = () => {
     }
   };
 
+  const renderProfileContent = () => {
+    if (isEditing) {
+      return (
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label">Nombre</label>
+            <input
+              type="text"
+              className="form-control"
+              name="nombre"
+              value={formData.nombre}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              className="form-control"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="d-flex gap-2">
+            <button type="submit" className="btn btn-success">
+              Guardar Cambios
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-secondary"
+              onClick={() => {
+                setIsEditing(false);
+                setFormData({
+                  nombre: userInfo.nombre,
+                  email: userInfo.email
+                });
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      );
+    }
+
+    return (
+      <div className="row mt-4">
+        <div className="col-md-6">
+          <p><strong>Nombre:</strong> {userInfo.nombre}</p>
+          <p><strong>Email:</strong> {userInfo.email}</p>
+          <p><strong>Rol:</strong> {userInfo.isAdmin ? 'Administrador' : 'Usuario'}</p>
+          <button 
+            className="btn btn-primary"
+            onClick={() => setIsEditing(true)}
+          >
+            Editar Perfil
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="container mt-4">
@@ -107,73 +173,40 @@ const Profile = () => {
   return (
     <div className="container mt-4">
       <div className="card">
-        <div className="card-body">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="card-title mb-0">Mi Perfil</h2>
-            {!isEditing && (
-              <button 
-                className="btn btn-primary"
-                onClick={() => setIsEditing(true)}
+        <div className="card-header">
+          <ul className="nav nav-tabs card-header-tabs">
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'profile' ? 'active' : ''}`}
+                onClick={() => setActiveTab('profile')}
               >
-                Editar Perfil
+                Mi Perfil
               </button>
-            )}
-          </div>
-
-          {isEditing ? (
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label className="form-label">Nombre</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Email</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="d-flex gap-2">
-                <button type="submit" className="btn btn-success">
-                  Guardar Cambios
-                </button>
-                <button 
-                  type="button" 
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setFormData({
-                      nombre: userInfo.nombre,
-                      email: userInfo.email
-                    });
-                  }}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          ) : (
-            userInfo && (
-              <div className="row mt-4">
-                <div className="col-md-6">
-                  <p><strong>Nombre:</strong> {userInfo.nombre}</p>
-                  <p><strong>Email:</strong> {userInfo.email}</p>
-                  <p><strong>Rol:</strong> {userInfo.isAdmin ? 'Administrador' : 'Usuario'}</p>
-                </div>
-              </div>
-            )
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'preferences' ? 'active' : ''}`}
+                onClick={() => setActiveTab('preferences')}
+              >
+                Preferencias
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'history' ? 'active' : ''}`}
+                onClick={() => setActiveTab('history')}
+              >
+                Historial de Compras
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div className="card-body">
+          {activeTab === 'profile' && userInfo && renderProfileContent()}
+          {activeTab === 'preferences' && userInfo && (
+            <Preferences userData={userInfo} onUpdate={fetchUserInfo} />
           )}
+          {activeTab === 'history' && <PurchaseHistory />}
         </div>
       </div>
     </div>

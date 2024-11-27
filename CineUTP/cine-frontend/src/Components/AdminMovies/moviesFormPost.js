@@ -1,49 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+
+// Lista de géneros tomada de preferences.js
+const generos = [
+  "Acción",
+  "Aventura",
+  "Comedia",
+  "Drama",
+  "Terror",
+  "Ciencia Ficción",
+  "Romance",
+  "Animación",
+];
 
 const MovieForm = ({ movie, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
-    titulo: '',
-    sinopsis: '',
+    titulo: "",
+    sinopsis: "",
     generos: [],
-    duracion: '',
-    clasificacion: '',
-    director: '',
-    actores: '',
-    imagen: '',
-    trailer: '',
-    fechaEstreno: '',
-    estado: 'Próximamente'
+    duracion: "",
+    clasificacion: "",
+    director: "",
+    actores: "",
+    imagen: "",
+    trailer: "",
+    fechaEstreno: "",
+    estado: "Próximamente",
   });
-
-  const generos = [
-    'Acción', 'Aventura', 'Comedia', 'Drama', 'Terror', 
-    'Ciencia Ficción', 'Romance', 'Animación'
-  ];
 
   useEffect(() => {
     if (movie) {
       setFormData({
         ...movie,
-        actores: movie.actores.join(', '),
-        fechaEstreno: movie.fechaEstreno.split('T')[0]
+        actores: movie.actores.join(", "),
+        fechaEstreno: movie.fechaEstreno.split("T")[0],
       });
     }
   }, [movie]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleGenreChange = (genre) => {
-    setFormData(prev => ({
-      ...prev,
-      generos: prev.generos.includes(genre)
-        ? prev.generos.filter(g => g !== genre)
-        : [...prev.generos, genre]
+      [name]: value,
     }));
   };
 
@@ -51,9 +49,13 @@ const MovieForm = ({ movie, onSubmit, onCancel }) => {
     e.preventDefault();
     const movieData = {
       ...formData,
-      actores: formData.actores.split(',').map(actor => actor.trim()),
-      duracion: parseInt(formData.duracion)
+      actores: formData.actores.split(",").map((actor) => actor.trim()),
+      duracion: parseInt(formData.duracion),
+      generos: Array.isArray(formData.generos) ? formData.generos : [],
     };
+
+    console.log("Datos de la película a enviar:", movieData);
+
     onSubmit(movieData);
   };
 
@@ -98,20 +100,35 @@ const MovieForm = ({ movie, onSubmit, onCancel }) => {
 
       <div className="mb-3">
         <label className="form-label">Géneros</label>
-        <div className="d-flex flex-wrap gap-2">
-          {generos.map(genre => (
-            <button
-              key={genre}
-              type="button"
-              className={`btn ${formData.generos.includes(genre) 
-                ? 'btn-primary' 
-                : 'btn-outline-primary'}`}
-              onClick={() => handleGenreChange(genre)}
-            >
-              {genre}
-            </button>
+        <select
+          className="form-select"
+          name="generos"
+          multiple
+          value={formData.generos}
+          onChange={(e) => {
+            const selectedGenres = Array.from(
+              e.target.selectedOptions,
+              (option) => option.value
+            );
+            console.log("Géneros seleccionados:", selectedGenres); // Para depuración
+            setFormData((prev) => ({
+              ...prev,
+              generos: selectedGenres,
+            }));
+          }}
+          required
+          size="5"
+        >
+          {generos.map((genero) => (
+            <option key={genero} value={genero}>
+              {genero}
+            </option>
           ))}
-        </div>
+        </select>
+        <small className="form-text text-muted">
+          Mantén presionado Ctrl (Windows) o Command (Mac) para seleccionar
+          múltiples géneros
+        </small>
       </div>
 
       <div className="row">
@@ -208,13 +225,9 @@ const MovieForm = ({ movie, onSubmit, onCancel }) => {
 
       <div className="d-flex gap-2">
         <button type="submit" className="btn btn-primary">
-          {movie ? 'Actualizar' : 'Crear'} Película
+          {movie ? "Actualizar" : "Crear"} Película
         </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={onCancel}
-        >
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>
           Cancelar
         </button>
       </div>

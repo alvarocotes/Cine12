@@ -17,18 +17,21 @@ exports.addMovie = async (req, res) => {
     console.log('Datos recibidos:', req.body); // Debug
 
     const {
-      title,
-      description,
-      genre,
-      duration,
-      image,
-      releaseDate,
+      titulo,
+      sinopsis,
+      generos,
+      duracion,
+      clasificacion,
       director,
-      cast
+      actores,
+      imagen,
+      trailer,
+      fechaEstreno,
+      estado
     } = req.body;
 
     // Validaciones básicas
-    if (!title || !description || !genre || !duration) {
+    if (!titulo || !sinopsis || !generos || !duracion) {
       return res.status(400).json({ 
         msg: 'Todos los campos son requeridos' 
       });
@@ -36,14 +39,17 @@ exports.addMovie = async (req, res) => {
 
     // Crear nueva película
     const movie = new Movie({
-      title,
-      description,
-      genre,
-      duration,
-      image,
-      releaseDate,
+      titulo,
+      sinopsis,
+      generos,
+      duracion,
+      clasificacion,
       director,
-      cast
+      actores,
+      imagen,
+      trailer,
+      fechaEstreno,
+      estado
     });
 
     await movie.save();
@@ -54,7 +60,6 @@ exports.addMovie = async (req, res) => {
     res.status(500).json({ msg: 'Error al agregar película' });
   }
 };
-
 // Actualizar película
 exports.updateMovie = async (req, res) => {
   try {
