@@ -1,62 +1,84 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 
-// Crear el contexto
-export const AuthContext = createContext();
+const AuthContext = createContext(null);
 
-// Hook personalizado para usar el contexto
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Agregamos estado de carga
+
+  // Verificar autenticación al cargar/recargar la página
+  useEffect(() => {
+    const verifyAuth = () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const decodedToken = jwtDecode(token);
+          console.log('Token verificado:', decodedToken);
+          console.log('Usuario:', decodedToken.user);
+          console.log('Es admin:', decodedToken.user.isAdmin);
+          
+          setUser(decodedToken.user);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Error al verificar token:', error);
+          localStorage.removeItem('token');
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    verifyAuth();
+  }, []);
+
+  const login = async (token) => {
+    try {
+      localStorage.setItem('token', token);
+      const decoded = jwtDecode(token);
+      setUser(decoded.user);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Error en login:', error);
+      localStorage.removeItem('token');
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+  };
+
+  const logout = () => {
+    console.log('Cerrando sesión...');
+    localStorage.removeItem('token');
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
+  // Si está cargando, mostramos un loading o null
+  if (isLoading) {
+    return <div>Cargando...</div>; // O puedes retornar null
+  }
+
+  const value = {
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth debe ser usado dentro de un AuthProvider');
   }
   return context;
-};
-
-// Proveedor del contexto
-export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Decodifica el token para obtener la información del usuario
-      const decodedToken = jwtDecode(token);
-      setUser(decodedToken.user);
-    }
-  }, []);
-
-  const login = (token) => {
-    try {
-      localStorage.setItem('token', token);
-      const decodedToken = jwtDecode(token);
-      console.log('Usuario decodificado:', decodedToken.user); // Debug general
-      
-      setUser(decodedToken.user);
-      setIsAuthenticated(true);
-  
-      // Validación específica para admin
-      if (decodedToken.user.isAdmin) {
-        console.log('¡Usuario Administrador detectado!');
-        console.log('Permisos de administración activados');
-        console.log('Usuario:', decodedToken.user.nombre);
-        console.log('Email:', decodedToken.user.email);
-      }
-    } catch (error) {
-      console.error('Error al procesar el token:', error);
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    setIsAuthenticated(false);
-  };
-
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, user }}>
-      {children}
-    </AuthContext.Provider>
-  );
 };

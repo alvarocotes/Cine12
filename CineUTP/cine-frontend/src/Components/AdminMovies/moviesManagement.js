@@ -10,43 +10,63 @@ const MovieManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedGenres, setSelectedGenres] = useState([]);
+
+  // Lista predefinida de géneros
+  const genresList = [
+    'Acción',
+    'Aventura',
+    'Comedia',
+    'Drama',
+    'Ciencia Ficción',
+    'Terror',
+    'Romance',
+    'Animación',
+    'Documental',
+    'Suspenso',
+    'Fantasía'
+  ];
+
   const [newMovie, setNewMovie] = useState({
-    title: '',
-    description: '',
-    genre: '',
-    duration: '',
-    image: '',
-    releaseDate: '',
+    titulo: '',
+    sinopsis: '',
+    generos: [],
+    duracion: '',
+    clasificacion: '',
     director: '',
-    cast: ''
+    actores: [],
+    imagen: '',
+    trailer: '',
+    fechaEstreno: '',
+    estado: 'Próximamente'
   });
 
   useEffect(() => {
-    console.log('Verificando permisos de admin...'); // Debug
+    console.log('Verificando permisos de admin...');
     if (!user?.isAdmin) {
-      console.log('Usuario no es admin, redirigiendo...'); // Debug
+      console.log('Usuario no es admin, redirigiendo...');
       navigate('/home');
       return;
     }
-    console.log('Usuario es admin, cargando películas...'); // Debug
+    console.log('Usuario es admin, cargando películas...');
     fetchMovies();
   }, [user, navigate]);
 
   const fetchMovies = async () => {
     try {
-      console.log('Obteniendo lista de películas...'); // Debug
+      console.log('Obteniendo lista de películas...');
       const token = localStorage.getItem('token');
       const response = await axios.get('http://localhost:5000/api/movies', {
         headers: { 'x-auth-token': token }
       });
-      console.log('Películas obtenidas:', response.data); // Debug
+      console.log('Películas obtenidas:', response.data);
       setMovies(response.data);
       setError('');
     } catch (err) {
-      console.error('Error al cargar películas:', err); // Debug
+      console.error('Error al cargar películas:', err);
       setError('Error al cargar las películas');
       if (err.response?.status === 401) {
-        console.log('Token inválido o expirado, cerrando sesión...'); // Debug
+        console.log('Token inválido o expirado, cerrando sesión...');
         logout();
       }
     } finally {
@@ -55,41 +75,65 @@ const MovieManagement = () => {
   };
 
   const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'actores') {
+      setNewMovie({
+        ...newMovie,
+        [name]: value.split(',').map(actor => actor.trim())
+      });
+    } else {
+      setNewMovie({
+        ...newMovie,
+        [name]: value
+      });
+    }
+  };
+
+  const handleGenreChange = (e) => {
+    const value = Array.from(e.target.selectedOptions, option => option.value);
+    setSelectedGenres(value);
     setNewMovie({
       ...newMovie,
-      [e.target.name]: e.target.value
+      generos: value
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log('Intentando agregar nueva película:', newMovie); // Debug
+      console.log('Intentando agregar nueva película:', newMovie);
       const token = localStorage.getItem('token');
       const response = await axios.post(
         'http://localhost:5000/api/movies',
         newMovie,
         {
-          headers: { 'x-auth-token': token }
+          headers: { 
+            'x-auth-token': token,
+            'Content-Type': 'application/json'
+          }
         }
       );
-      console.log('Película agregada exitosamente:', response.data); // Debug
+      console.log('Película agregada exitosamente:', response.data);
       
       setNewMovie({
-        title: '',
-        description: '',
-        genre: '',
-        duration: '',
-        image: '',
-        releaseDate: '',
+        titulo: '',
+        sinopsis: '',
+        generos: [],
+        duracion: '',
+        clasificacion: '',
         director: '',
-        cast: ''
+        actores: [],
+        imagen: '',
+        trailer: '',
+        fechaEstreno: '',
+        estado: 'Próximamente'
       });
+      setSelectedGenres([]);
       setShowAddForm(false);
       fetchMovies();
       setError('');
     } catch (err) {
-      console.error('Error al agregar película:', err); // Debug
+      console.error('Error al agregar película:', err);
       setError(err.response?.data?.msg || 'Error al agregar la película');
       if (err.response?.status === 401) {
         logout();
@@ -97,9 +141,8 @@ const MovieManagement = () => {
     }
   };
 
-  // Verificación adicional de admin
   if (!user?.isAdmin) {
-    console.log('Renderizado bloqueado: usuario no es admin'); // Debug
+    console.log('Renderizado bloqueado: usuario no es admin');
     return null;
   }
 
@@ -139,53 +182,89 @@ const MovieManagement = () => {
                 <input
                   type="text"
                   className="form-control"
-                  name="title"
-                  value={newMovie.title}
+                  name="titulo"
+                  value={newMovie.titulo}
                   onChange={handleInputChange}
                   required
                 />
               </div>
               <div className="mb-3">
-                <label className="form-label">Descripción</label>
+                <label className="form-label">Sinopsis</label>
                 <textarea
                   className="form-control"
-                  name="description"
-                  value={newMovie.description}
+                  name="sinopsis"
+                  value={newMovie.sinopsis}
                   onChange={handleInputChange}
                   required
                 />
               </div>
               <div className="mb-3">
-                <label className="form-label">Género</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="genre"
-                  value={newMovie.genre}
-                  onChange={handleInputChange}
+                <label className="form-label">Géneros</label>
+                <select
+                  multiple
+                  className="form-select"
+                  name="generos"
+                  value={selectedGenres}
+                  onChange={handleGenreChange}
                   required
-                />
+                  size="5"
+                >
+                  {genresList.map((genre) => (
+                    <option key={genre} value={genre}>
+                      {genre}
+                    </option>
+                  ))}
+                </select>
+                <small className="form-text text-muted">
+                  Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples géneros
+                </small>
               </div>
               <div className="mb-3">
                 <label className="form-label">Duración (minutos)</label>
                 <input
                   type="number"
                   className="form-control"
-                  name="duration"
-                  value={newMovie.duration}
+                  name="duracion"
+                  value={newMovie.duracion}
                   onChange={handleInputChange}
                   required
                 />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Clasificación</label>
+                <select
+                  className="form-select"
+                  name="clasificacion"
+                  value={newMovie.clasificacion}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Seleccionar clasificación</option>
+                  <option value="G">G (Apto para todo público)</option>
+                  <option value="PG">PG (Guía parental)</option>
+                  <option value="PG-13">PG-13 (Mayores de 13)</option>
+                  <option value="R">R (Restringido)</option>
+                </select>
               </div>
               <div className="mb-3">
                 <label className="form-label">URL de la Imagen</label>
                 <input
                   type="url"
                   className="form-control"
-                  name="image"
-                  value={newMovie.image}
+                  name="imagen"
+                  value={newMovie.imagen}
                   onChange={handleInputChange}
                   required
+                />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">URL del Trailer</label>
+                <input
+                  type="url"
+                  className="form-control"
+                  name="trailer"
+                  value={newMovie.trailer}
+                  onChange={handleInputChange}
                 />
               </div>
               <div className="mb-3">
@@ -193,8 +272,8 @@ const MovieManagement = () => {
                 <input
                   type="date"
                   className="form-control"
-                  name="releaseDate"
-                  value={newMovie.releaseDate}
+                  name="fechaEstreno"
+                  value={newMovie.fechaEstreno}
                   onChange={handleInputChange}
                   required
                 />
@@ -211,16 +290,30 @@ const MovieManagement = () => {
                 />
               </div>
               <div className="mb-3">
-                <label className="form-label">Reparto</label>
+                <label className="form-label">Actores</label>
                 <input
                   type="text"
                   className="form-control"
-                  name="cast"
-                  value={newMovie.cast}
+                  name="actores"
+                  value={newMovie.actores.join(', ')}
                   onChange={handleInputChange}
                   placeholder="Separar actores por comas"
                   required
                 />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Estado</label>
+                <select
+                  className="form-select"
+                  name="estado"
+                  value={newMovie.estado}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="Próximamente">Próximamente</option>
+                  <option value="En Cartelera">En Cartelera</option>
+                  <option value="Finalizada">Finalizada</option>
+                </select>
               </div>
               <button type="submit" className="btn btn-success">
                 Guardar Película
@@ -235,19 +328,20 @@ const MovieManagement = () => {
           <div key={movie._id} className="col-md-4 mb-4">
             <div className="card h-100">
               <img 
-                src={movie.image} 
+                src={movie.imagen} 
                 className="card-img-top" 
-                alt={movie.title}
+                alt={movie.titulo}
                 style={{ height: '400px', objectFit: 'cover' }}
               />
               <div className="card-body">
-                <h5 className="card-title">{movie.title}</h5>
-                <p className="card-text">{movie.description}</p>
+                <h5 className="card-title">{movie.titulo}</h5>
+                <p className="card-text">{movie.sinopsis}</p>
                 <p className="card-text">
                   <small className="text-muted">
-                    Género: {movie.genre}<br/>
-                    Duración: {movie.duration} minutos<br/>
-                    Director: {movie.director}
+                    Géneros: {movie.generos.join(', ')}<br/>
+                    Duración: {movie.duracion} minutos<br/>
+                    Director: {movie.director}<br/>
+                    Estado: {movie.estado}
                   </small>
                 </p>
               </div>

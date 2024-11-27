@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Components/Auth/login';
 import Register from './Components/Auth/register';
@@ -11,8 +11,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 // Componente para la barra de navegación
 const Navbar = () => {
   const { isAuthenticated, logout, user } = useAuth();
-  console.log('Estado de autenticación:', isAuthenticated); // Debug
-  console.log('Usuario:', user); // Debug
+  console.log('Navbar - Estado de autenticación:', isAuthenticated); // Debug
+  console.log('Navbar - Usuario:', user); // Debug
+  console.log('Navbar - Es admin:', user?.isAdmin); // Debug
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -47,7 +48,10 @@ const Navbar = () => {
               <li className="nav-item">
                 <button 
                   className="btn btn-outline-light ms-2" 
-                  onClick={logout}
+                  onClick={() => {
+                    console.log('Cerrando sesión...'); // Debug
+                    logout();
+                  }}
                 >
                   Cerrar Sesión
                 </button>
@@ -69,11 +73,59 @@ const Navbar = () => {
   );
 };
 
-// Componente para rutas de administrador
+// Componente mejorado para rutas protegidas de administrador
 const AdminRoute = ({ children }) => {
-  const { isAuthenticated, user } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" />;
-  if (!user?.isAdmin) return <Navigate to="/home" />;
+  const { isAuthenticated, user, isLoading } = useAuth();
+  
+  console.log('AdminRoute - Verificando permisos...'); // Debug
+  console.log('AdminRoute - Usuario autenticado:', isAuthenticated); // Debug
+  console.log('AdminRoute - Información de usuario:', user); // Debug
+  console.log('AdminRoute - Es admin:', user?.isAdmin); // Debug
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      console.log('AdminRoute - Usuario no autenticado, redirigiendo a login'); // Debug
+      return;
+    }
+    
+    if (!user?.isAdmin) {
+      console.log('AdminRoute - Usuario no es admin, redirigiendo a home'); // Debug
+      return;
+    }
+    
+    console.log('AdminRoute - Acceso permitido'); // Debug
+  }, [isAuthenticated, user]);
+
+  // Si está cargando, esperar
+  if (isLoading) {
+    return <div>Cargando...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!user?.isAdmin) {
+    return <Navigate to="/home" />;
+  }
+
+  return children;
+};
+
+// Componente para rutas protegidas generales
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  console.log('ProtectedRoute - Usuario autenticado:', isAuthenticated); // Debug
+  
+  if (isLoading) {
+    return <div>Cargando...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
   return children;
 };
 
@@ -83,13 +135,30 @@ function App() {
       <Router>
         <Navbar />
         <Routes>
-          {/* Rutas existentes */}
+          {/* Rutas públicas */}
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
+
+          {/* Rutas protegidas */}
+          <Route 
+            path="/home" 
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } 
+          />
           
+          {/* Rutas de administrador */}
           <Route 
             path="/admin/movies" 
             element={
@@ -99,6 +168,7 @@ function App() {
             } 
           />
 
+          {/* Ruta por defecto */}
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </Router>
