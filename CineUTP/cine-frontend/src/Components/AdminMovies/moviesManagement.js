@@ -11,6 +11,7 @@ const MovieManagement = () => {
   const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState([]);
+  const [isEditing, setIsEditing] = useState(false); // Nuevo estado para saber si estamos editando
 
   // Lista predefinida de géneros
   const genresList = [
@@ -116,22 +117,39 @@ const MovieManagement = () => {
         "estado": newMovie.estado
       };
 
-      console.log('Datos formateados a enviar:', movieData);
-      
       const token = localStorage.getItem('token');
-      const response = await axios.post(
-        'http://localhost:5000/api/movies',
-        movieData,
-        {
-          headers: { 
-            'x-auth-token': token,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
 
-      console.log('Película agregada exitosamente:', response.data);
-      
+      if (isEditing) {
+        // Actualizar película existente
+        const response = await axios.put(
+          `http://localhost:5000/api/movies/${newMovie._id}`, // Usar el ID de la película
+          movieData,
+          {
+            headers: { 
+              'x-auth-token': token,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        console.log('Película actualizada exitosamente:', response.data);
+      } else {
+        // Crear nueva película
+        const response = await axios.post(
+          'http://localhost:5000/api/movies',
+          movieData,
+          {
+            headers: { 
+              'x-auth-token': token,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        console.log('Película agregada exitosamente:', response.data);
+      }
+
+      // Resetear el formulario
       setNewMovie({
         titulo: '',
         sinopsis: '',
@@ -147,15 +165,35 @@ const MovieManagement = () => {
       });
       setSelectedGenres([]);
       setShowAddForm(false);
+      setIsEditing(false); // Resetear el estado de edición
       fetchMovies();
       setError('');
     } catch (err) {
-      console.error('Error al agregar película:', err);
-      setError(err.response?.data?.msg || 'Error al agregar la película');
+      console.error('Error al guardar película:', err);
+      setError(err.response?.data?.msg || 'Error al guardar la película');
       if (err.response?.status === 401) {
         logout();
       }
     }
+  };
+
+  const handleDeleteMovie = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:5000/api/movies/${id}`, {
+        headers: { 'x-auth-token': token }
+      });
+      fetchMovies(); // Refrescar la lista de películas
+    } catch (err) {
+      console.error('Error al eliminar película:', err);
+      setError('Error al eliminar la película');
+    }
+  };
+
+  const handleEditMovie = (movie) => {
+    setNewMovie(movie); // Prellenar el formulario con los datos de la película
+    setShowAddForm(true); // Mostrar el formulario de agregar película
+    setIsEditing(true); // Cambiar el estado a edición
   };
 
   if (!user?.isAdmin) {
@@ -181,7 +219,10 @@ const MovieManagement = () => {
         <h2>Gestión de Películas</h2>
         <button 
           className="btn btn-primary"
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => {
+            setShowAddForm(!showAddForm);
+            setIsEditing(false); // Resetear el estado de edición al cerrar el formulario
+          }}
         >
           {showAddForm ? 'Cancelar' : 'Agregar Película'}
         </button>
@@ -192,7 +233,7 @@ const MovieManagement = () => {
       {showAddForm && (
         <div className="card mb-4">
           <div className="card-body">
-            <h3 className="card-title">Agregar Nueva Película</h3>
+            <h3 className="card-title">{isEditing ? 'Editar Película' : 'Agregar Nueva Película'}</h3>
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label className="form-label">Título</label>
@@ -333,7 +374,7 @@ const MovieManagement = () => {
                 </select>
               </div>
               <button type="submit" className="btn btn-success">
-                Guardar Película
+                {isEditing ? 'Actualizar Película' : 'Guardar Película'}
               </button>
             </form>
           </div>
@@ -361,6 +402,8 @@ const MovieManagement = () => {
                     Estado: {movie.estado}
                   </small>
                 </p>
+                <button className="btn btn-warning" onClick={() => handleEditMovie(movie)}>Editar</button>
+                <button className="btn btn-danger" onClick={() => handleDeleteMovie(movie._id)}>Eliminar</button>
               </div>
             </div>
           </div>
