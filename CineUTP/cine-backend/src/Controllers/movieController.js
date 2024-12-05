@@ -25,7 +25,6 @@ exports.addMovie = async (req, res) => {
       director,
       actores,
       imagen,
-      trailer,
       fechaEstreno,
       estado
     } = req.body;
@@ -47,7 +46,6 @@ exports.addMovie = async (req, res) => {
       director,
       actores,
       imagen,
-      trailer,
       fechaEstreno,
       estado
     });

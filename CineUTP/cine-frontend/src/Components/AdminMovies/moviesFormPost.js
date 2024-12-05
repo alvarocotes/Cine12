@@ -1,30 +1,17 @@
-import React, { useState, useEffect } from "react";
-
-// Lista de géneros tomada de preferences.js
-const generos = [
-  "Acción",
-  "Aventura",
-  "Comedia",
-  "Drama",
-  "Terror",
-  "Ciencia Ficción",
-  "Romance",
-  "Animación",
-];
+import React, { useState, useEffect } from 'react';
 
 const MovieForm = ({ movie, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
-    titulo: "",
-    sinopsis: "",
+    titulo: '',
+    sinopsis: '',
     generos: [],
-    duracion: "",
-    clasificacion: "",
-    director: "",
-    actores: "",
-    imagen: "",
-    trailer: "",
-    fechaEstreno: "",
-    estado: "Próximamente",
+    duracion: '',
+    clasificacion: '',
+    director: '',
+    actores: '',
+    imagen: '',
+    fechaEstreno: '',
+    estado: 'Próximamente',
   });
 
   useEffect(() => {
@@ -55,37 +42,22 @@ const MovieForm = ({ movie, onSubmit, onCancel }) => {
     };
 
     console.log("Datos de la película a enviar:", movieData);
-
-    onSubmit(movieData);
+    onSubmit(movieData); // Llama a la función de envío
   };
 
   return (
     <form onSubmit={handleSubmit} className="mb-4">
-      <div className="row">
-        <div className="col-md-6 mb-3">
-          <label className="form-label">Título</label>
-          <input
-            type="text"
-            className="form-control"
-            name="titulo"
-            value={formData.titulo}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="col-md-6 mb-3">
-          <label className="form-label">Director</label>
-          <input
-            type="text"
-            className="form-control"
-            name="director"
-            value={formData.director}
-            onChange={handleChange}
-            required
-          />
-        </div>
+      <div className="mb-3">
+        <label className="form-label">Título</label>
+        <input
+          type="text"
+          className="form-control"
+          name="titulo"
+          value={formData.titulo}
+          onChange={handleChange}
+          required
+        />
       </div>
-
       <div className="mb-3">
         <label className="form-label">Sinopsis</label>
         <textarea
@@ -94,123 +66,76 @@ const MovieForm = ({ movie, onSubmit, onCancel }) => {
           value={formData.sinopsis}
           onChange={handleChange}
           required
-          rows="3"
         />
       </div>
-
       <div className="mb-3">
         <label className="form-label">Géneros</label>
-        <select
-          className="form-select"
+        <input
+          type="text"
+          className="form-control"
           name="generos"
-          multiple
-          value={formData.generos}
-          onChange={(e) => {
-            const selectedGenres = Array.from(
-              e.target.selectedOptions,
-              (option) => option.value
-            );
-            console.log("Géneros seleccionados:", selectedGenres); // Para depuración
-            setFormData((prev) => ({
-              ...prev,
-              generos: selectedGenres,
-            }));
-          }}
+          value={formData.generos.join(', ')}
+          onChange={handleChange}
+          placeholder="Separar géneros por comas"
           required
-          size="5"
-        >
-          {generos.map((genero) => (
-            <option key={genero} value={genero}>
-              {genero}
-            </option>
-          ))}
-        </select>
-        <small className="form-text text-muted">
-          Mantén presionado Ctrl (Windows) o Command (Mac) para seleccionar
-          múltiples géneros
-        </small>
+        />
       </div>
-
-      <div className="row">
-        <div className="col-md-4 mb-3">
-          <label className="form-label">Duración (minutos)</label>
-          <input
-            type="number"
-            className="form-control"
-            name="duracion"
-            value={formData.duracion}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="col-md-4 mb-3">
-          <label className="form-label">Clasificación</label>
-          <select
-            className="form-select"
-            name="clasificacion"
-            value={formData.clasificacion}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccionar...</option>
-            <option value="G">G (Todo público)</option>
-            <option value="PG">PG (Guía parental)</option>
-            <option value="PG-13">PG-13 (Mayores de 13)</option>
-            <option value="R">R (Restringido)</option>
-          </select>
-        </div>
-        <div className="col-md-4 mb-3">
-          <label className="form-label">Estado</label>
-          <select
-            className="form-select"
-            name="estado"
-            value={formData.estado}
-            onChange={handleChange}
-            required
-          >
-            <option value="Próximamente">Próximamente</option>
-            <option value="En Cartelera">En Cartelera</option>
-            <option value="Finalizada">Finalizada</option>
-          </select>
-        </div>
-      </div>
-
       <div className="mb-3">
-        <label className="form-label">Actores (separados por comas)</label>
+        <label className="form-label">Duración (minutos)</label>
+        <input
+          type="number"
+          className="form-control"
+          name="duracion"
+          value={formData.duracion}
+          onChange={handleChange}
+          required
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label">Clasificación</label>
+        <input
+          type="text"
+          className="form-control"
+          name="clasificacion"
+          value={formData.clasificacion}
+          onChange={handleChange}
+          required
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label">Director</label>
+        <input
+          type="text"
+          className="form-control"
+          name="director"
+          value={formData.director}
+          onChange={handleChange}
+          required
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label">Actores</label>
         <input
           type="text"
           className="form-control"
           name="actores"
           value={formData.actores}
           onChange={handleChange}
-          placeholder="Actor 1, Actor 2, Actor 3"
+          placeholder="Separar actores por comas"
+          required
         />
       </div>
-
-      <div className="row">
-        <div className="col-md-6 mb-3">
-          <label className="form-label">URL de la Imagen</label>
-          <input
-            type="url"
-            className="form-control"
-            name="imagen"
-            value={formData.imagen}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="col-md-6 mb-3">
-          <label className="form-label">URL del Trailer</label>
-          <input
-            type="url"
-            className="form-control"
-            name="trailer"
-            value={formData.trailer}
-            onChange={handleChange}
-          />
-        </div>
+      <div className="mb-3">
+        <label className="form-label">Imagen URL</label>
+        <input
+          type="text"
+          className="form-control"
+          name="imagen"
+          value={formData.imagen}
+          onChange={handleChange}
+          required
+        />
       </div>
-
       <div className="mb-3">
         <label className="form-label">Fecha de Estreno</label>
         <input
@@ -222,7 +147,20 @@ const MovieForm = ({ movie, onSubmit, onCancel }) => {
           required
         />
       </div>
-
+      <div className="mb-3">
+        <label className="form-label">Estado</label>
+        <select
+          className="form-select"
+          name="estado"
+          value={formData.estado}
+          onChange={handleChange}
+          required
+        >
+          <option value="Próximamente">Próximamente</option>
+          <option value="En Cartelera">En Cartelera</option>
+          <option value="Finalizada">Finalizada</option>
+        </select>
+      </div>
       <div className="d-flex gap-2">
         <button type="submit" className="btn btn-primary">
           {movie ? "Actualizar" : "Crear"} Película

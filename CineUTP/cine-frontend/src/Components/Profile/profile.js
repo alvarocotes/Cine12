@@ -12,11 +12,12 @@ const Profile = () => {
   const [error, setError] = useState('');
   const [userInfo, setUserInfo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
     nombre: '',
-    email: ''
+    email: '',
+    telefono: ''
   });
+  const [activeTab, setActiveTab] = useState('profile'); // Estado para manejar la pestaña activa
 
   const fetchUserInfo = async () => {
     try {
@@ -35,7 +36,8 @@ const Profile = () => {
       setUserInfo(response.data);
       setFormData({
         nombre: response.data.nombre,
-        email: response.data.email
+        email: response.data.email,
+        telefono: response.data.telefono || ''
       });
       setError('');
     } catch (err) {
@@ -86,68 +88,93 @@ const Profile = () => {
   };
 
   const renderProfileContent = () => {
-    if (isEditing) {
+    if (activeTab === 'profile') {
+      if (isEditing) {
+        return (
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label className="form-label">Nombre</label>
+              <input
+                type="text"
+                className="form-control"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Email</label>
+              <input
+                type="email"
+                className="form-control"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Teléfono</label>
+              <input
+                type="tel"
+                className="form-control"
+                name="telefono"
+                value={formData.telefono}
+                onChange={handleInputChange}
+                placeholder={formData.telefono ? '' : 'No se tiene ningún número telefónico registrado'}
+              />
+            </div>
+            <div className="d-flex gap-2">
+              <button type="submit" className="btn btn-success">
+                Guardar Cambios
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-secondary"
+                onClick={() => {
+                  setIsEditing(false);
+                  setFormData({
+                    nombre: userInfo.nombre,
+                    email: userInfo.email,
+                    telefono: userInfo.telefono || ''
+                  });
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        );
+      }
+
       return (
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label">Nombre</label>
-            <input
-              type="text"
-              className="form-control"
-              name="nombre"
-              value={formData.nombre}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Email</label>
-            <input
-              type="email"
-              className="form-control"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div className="d-flex gap-2">
-            <button type="submit" className="btn btn-success">
-              Guardar Cambios
-            </button>
+        <div className="row mt-4">
+          <div className="col-md-6">
+            <p><strong>Nombre:</strong> {userInfo.nombre}</p>
+            <p><strong>Email:</strong> {userInfo.email}</p>
+            <p><strong>Teléfono:</strong> {userInfo.telefono || 'No registrado'}</p>
             <button 
-              type="button" 
-              className="btn btn-secondary"
-              onClick={() => {
-                setIsEditing(false);
-                setFormData({
-                  nombre: userInfo.nombre,
-                  email: userInfo.email
-                });
-              }}
+              className="btn btn-primary"
+              onClick={() => setIsEditing(true)}
             >
-              Cancelar
+              Editar Perfil
             </button>
           </div>
-        </form>
+        </div>
       );
     }
 
-    return (
-      <div className="row mt-4">
-        <div className="col-md-6">
-          <p><strong>Nombre:</strong> {userInfo.nombre}</p>
-          <p><strong>Email:</strong> {userInfo.email}</p>
-          <p><strong>Rol:</strong> {userInfo.isAdmin ? 'Administrador' : 'Usuario'}</p>
-          <button 
-            className="btn btn-primary"
-            onClick={() => setIsEditing(true)}
-          >
-            Editar Perfil
-          </button>
-        </div>
-      </div>
-    );
+    // Renderizar contenido de preferencias o historial de compras
+    if (activeTab === 'preferences' && userInfo) {
+      return <Preferences userData={userInfo} onUpdate={fetchUserInfo} />;
+    }
+
+    if (activeTab === 'history') {
+      return <PurchaseHistory />;
+    }
+
+    return null; // En caso de que no haya contenido que mostrar
   };
 
   if (loading) {
@@ -202,11 +229,7 @@ const Profile = () => {
           </ul>
         </div>
         <div className="card-body">
-          {activeTab === 'profile' && userInfo && renderProfileContent()}
-          {activeTab === 'preferences' && userInfo && (
-            <Preferences userData={userInfo} onUpdate={fetchUserInfo} />
-          )}
-          {activeTab === 'history' && <PurchaseHistory />}
+          {renderProfileContent()}
         </div>
       </div>
     </div>
