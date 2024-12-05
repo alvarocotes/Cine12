@@ -14,22 +14,48 @@ const MovieForm = ({ movie, onSubmit, onCancel }) => {
     estado: 'Próximamente',
   });
 
+  const availableGenres = [
+    "Acción",
+    "Aventura",
+    "Comedia",
+    "Drama",
+    "Terror",
+    "Ciencia Ficción",
+    "Romance",
+    "Animación"
+  ];
+
   useEffect(() => {
     if (movie) {
       setFormData({
         ...movie,
         actores: movie.actores.join(", "),
         fechaEstreno: movie.fechaEstreno.split("T")[0],
+        generos: movie.generos || [], // Asegúrate de que generos esté en el estado
       });
     }
   }, [movie]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    if (name === "generos") {
+      const options = e.target.options;
+      const selectedGenres = [];
+      for (let i = 0; i < options.length; i++) {
+        if (options[i].selected) {
+          selectedGenres.push(options[i].value);
+        }
+      }
+      setFormData((prev) => ({
+        ...prev,
+        generos: selectedGenres,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = (e) => {
@@ -38,7 +64,6 @@ const MovieForm = ({ movie, onSubmit, onCancel }) => {
       ...formData,
       actores: formData.actores.split(",").map((actor) => actor.trim()),
       duracion: parseInt(formData.duracion),
-      generos: Array.isArray(formData.generos) ? formData.generos : [],
     };
 
     console.log("Datos de la película a enviar:", movieData);
@@ -70,15 +95,20 @@ const MovieForm = ({ movie, onSubmit, onCancel }) => {
       </div>
       <div className="mb-3">
         <label className="form-label">Géneros</label>
-        <input
-          type="text"
+        <select
+          multiple
           className="form-control"
           name="generos"
-          value={formData.generos.join(', ')}
+          value={formData.generos}
           onChange={handleChange}
-          placeholder="Separar géneros por comas"
           required
-        />
+        >
+          {availableGenres.map((genre) => (
+            <option key={genre} value={genre}>
+              {genre}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="mb-3">
         <label className="form-label">Duración (minutos)</label>
